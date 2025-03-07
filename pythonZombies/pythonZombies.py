@@ -29,8 +29,6 @@ class Floor:
     def __init__(self, floorNumber, numberOfRooms):
         self.floorNumber = floorNumber
         self.rooms = [Room(i) for i in range(numberOfRooms)]
-    def getRooms(self):
-        return[str(room) for room in self.rooms]
 
 class Building:
     def __init__(self, numberOfFloors, roomsPerFloor):
@@ -87,12 +85,12 @@ def deactivateSensor(building):
             roomIndex = roomNumber - 1
 
             if floorIndex < 0 or floorIndex >= len(building.floors):
-                print(f"Número de piso inválido. Debe estar entre 0 y {len(building.floors) - 1}")
+                print(f"Número de piso inválido. Debe estar entre 0 y {len(building.floors)}")
                 continue
                 
             floor = building.floors[floorIndex]
             if roomIndex < 0 or roomIndex >= len(floor.rooms):
-                print(f"Número de habitación inválido. Debe estar entre 0 y {len(floor.rooms) - 1}")
+                print(f"Número de habitación inválido. Debe estar entre 0 y {len(floor.rooms)}")
                 continue
                 
             room = floor.rooms[roomIndex]
