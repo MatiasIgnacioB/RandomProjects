@@ -17,7 +17,7 @@
 
 # """Back-End"""
 class Room:
-    def __init__(self, roomNumber, sensor):
+    def __init__(self, roomNumber):
         self.sensor = False
         self.roomNumber = roomNumber
     def activateSensor(self):
@@ -28,25 +28,27 @@ class Room:
 class Floor:
     def __init__(self, floorNumber, numberOfRooms):
         self.floorNumber = floorNumber
-        self.rooms = [Rooms(i) for i in range(numberOfRooms)]
+        self.rooms = [Room(i) for i in range(numberOfRooms)]
     def getRooms(self):
         return[str(room) for room in self.rooms]
 
 class Building:
-    def __init(self, numberOfFloors, roomsPerFloor):
+    def __init__(self, numberOfFloors, roomsPerFloor):
         self.floors = [Floor(i, roomsPerFloor) for i in range(numberOfFloors)]
+
+sensorLog = []
 
 def createBuilding():
     while True:
         try:
             numberOfFloors = int(input("Ingrese numero de pisos: "))
             roomsPerFloor = int(input("Ingrese numero de habitaciones por piso: "))
-            if numberOfRooms <= 0 or roomsPerFloor <=0:
+            if numberOfFloors <= 0 or roomsPerFloor <=0:
                 print("Infgrese un numero valido")
                 continue
             building = Building(numberOfFloors, roomsPerFloor)
 
-            print(f"Edificio creado con {num_floors} pisos y {rooms_per_floor} habitaciones por piso.")
+            print(f"Edificio creado con {numberOfFloors} pisos y {roomsPerFloor} habitaciones por piso.")
             return building
 
         except ValueError:
@@ -60,13 +62,13 @@ def showActiveSensors(building):
     for floor in building.floors:
         for room in floor.rooms:
             if room.sensor:
-                activeSensors.append((floor.number, room.number))
+                activeSensors.append((floor.floorNumber, room.roomNumber))
 
     if not activeSensors:
         print("no hay sensores en alerta")
     else:
         for floorNumber, roomNumber in activeSensors:
-            print(f"\nHabitacion: {roomNumber} del piso {floorNumber}")
+            print(f"\nHabitacion: {roomNumber+1} del piso {floorNumber+1}")
 
     return activeSensors
 
@@ -81,16 +83,19 @@ def deactivateSensor(building):
             floorNumber = int(input("Ingrese número de piso de la habitación: "))
             roomNumber = int(input("Ingrese número de habitación para desactivar el sensor: "))
             
-            if floorNumber < 0 or floorNumber >= len(building.floors):
+            floorIndex = floorNumber - 1
+            roomIndex = roomNumber - 1
+
+            if floorIndex < 0 or floorIndex >= len(building.floors):
                 print(f"Número de piso inválido. Debe estar entre 0 y {len(building.floors) - 1}")
                 continue
                 
-            floor = building.floors[floorNumber]
-            if roomNumber < 0 or roomNumber >= len(floor.rooms):
+            floor = building.floors[floorIndex]
+            if roomIndex < 0 or roomIndex >= len(floor.rooms):
                 print(f"Número de habitación inválido. Debe estar entre 0 y {len(floor.rooms) - 1}")
                 continue
                 
-            room = floor.rooms[roomNumber]
+            room = floor.rooms[roomIndex]
             if not room.sensor:
                 print(f"El sensor en la habitación {roomNumber} del piso {floorNumber} no está activo.")
                 continue
@@ -106,28 +111,43 @@ def advanceSimulation(building, isFirstAdvance = False):
     roomsToInfect = []
 
     if isFirstAdvance:
-        print("Zombies entraron al edificio, (habitacion 1 del piso 1)")
         roomsToInfect.append((0, 0))
     else:
-        for floorIndex, floor in 
+        for floorIndex, floor in  enumerate(building.floors):
+            for roomIndex, room in enumerate(floor.rooms):
+                if room.sensor:
+                    if roomIndex > 0:
+                        roomsToInfect.append((floorIndex, roomIndex-1))
+                    if roomIndex < len(floor.rooms) - 1:
+                        roomsToInfect.append((floorIndex, roomIndex+1))
+                    if floorIndex > 0:
+                        roomsToInfect.append((floorIndex -1, roomIndex))
+                    if floorIndex < len(building.floors) -1:
+                        roomsToInfect.append((floorIndex+1, roomIndex)) 
 
     for floorIndex, roomIndex in roomsToInfect:
         targetRoom = building.floors[floorIndex].rooms[roomIndex]
-        if not room.sensor:
-            room.activateSensor()
-
+        if not targetRoom.sensor:
+            targetRoom.activateSensor()
+    print("Avanzo la infeccion, estas son las habitaciones con zombies: ")
+    activeSensors = showActiveSensors(building)
+    
 def main():
+    building = None
+
     while True:
         print("--- Menu ---")
         print("[1]. Configurar Edificio")
         print("[2]. Limpiar Habitacion")
-        print("[3]. Generar Log de sensores")
-        print("[4]. Salir")
+        print("[3]. Avanzar la simulacion")
+        print("[4]. Generar Log de sensores")
+        print("[5]. Salir")
 
         opcion = input("Seleccione una opcion: ")
 
         if opcion == "1": #crear building
             building = createBuilding()
+            FirstAdvance = True
 
         elif opcion == "2": #limpiar sensor
             if building:
@@ -136,11 +156,13 @@ def main():
                 print("Primero debe configurar el edificio")
 
         elif opcion == "3": #avanzar simulacion
-            print("Avanzar Simulacion")
             if building:
-                ########################
+                advanceSimulation(building, FirstAdvance)
+                if FirstAdvance:
+                    FirstAdvance = False  # After first advance, set flag to false
             else:
-                print("Primero debe configurar el edificio")
+                print("Primero debe configurar el edificio.")      
+
         elif opcion == "4": #crear json
             print("Funcionalidad: Generar log de sensores (Pendiente)")
 
